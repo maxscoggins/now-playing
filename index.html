@@ -1,0 +1,264 @@
+<!-- THIS FILE GOES AT YOUR REPO ROOT, AS index.html (the hub/landing page) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing — Projects</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0a0a0a;
+    --green:#1ed760;
+    --purple:#6b2fe0;
+    --pink:#ff3d9a;
+    --yellow:#ffd520;
+    --cream:#f5f1e8;
+    --dim:#a89f92;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{ width:100%; min-height:100%; background:var(--black); color:var(--cream); font-family:'Inter', sans-serif; }
+  body{
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh; padding:7vh 24px 10vh; position:relative; overflow-x:hidden;
+  }
+
+  /* decorative squiggle — original artwork, evokes Wrapped's ribbon accents */
+  .squiggle{ position:fixed; pointer-events:none; opacity:0.55; z-index:0; }
+  .squiggle.tl{ top:-40px; left:-60px; width:280px; transform:rotate(-10deg); }
+  .squiggle.br{ bottom:-60px; right:-80px; width:320px; transform:rotate(15deg) scaleX(-1); }
+
+  header{ text-align:center; margin-bottom:6vh; position:relative; z-index:1; }
+  header .eyebrow{ font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+  h1{
+    font-family:'Archivo Black', sans-serif;
+    font-size:clamp(30px, 6vw, 52px);
+    text-transform:uppercase;
+    line-height:0.95;
+    margin-top:10px;
+    background:linear-gradient(90deg, var(--green), var(--yellow) 50%, var(--pink));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  #cards{ display:flex; flex-wrap:wrap; gap:22px; justify-content:center; max-width:820px; position:relative; z-index:1; }
+  .card{
+    width:340px; min-height:220px;
+    border-radius:16px;
+    padding:26px 24px;
+    text-decoration:none;
+    color:var(--black);
+    display:flex; flex-direction:column; gap:10px;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    position:relative; overflow:hidden;
+  }
+  .card:hover{ transform:translateY(-3px); }
+  .card.c-green{ background:var(--green); }
+  .card.c-purple{ background:var(--purple); color:var(--cream); }
+  .card .status{
+    align-self:flex-start;
+    font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px;
+    background:rgba(0,0,0,0.16);
+  }
+  .card.c-purple .status{ background:rgba(255,255,255,0.16); }
+  .card .status.on::before{ content:"● "; }
+  .card .status.off::before{ content:"○ "; }
+  .card h2{
+    font-family:'Archivo Black', sans-serif;
+    font-size:26px; text-transform:uppercase; line-height:1; margin-top:6px;
+  }
+  .card p{ font-size:13px; line-height:1.6; font-weight:500; opacity:0.85; }
+  .card .cta{ margin-top:auto; padding-top:10px; font-size:12px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; }
+  .card.locked{ opacity:0.55; }
+  .card.locked:hover{ transform:none; }
+
+  /* ---------- Settings — collapsed icon, pops a panel ---------- */
+  #settings-toggle{
+    position:fixed; top:18px; right:18px; z-index:6;
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; opacity:0.55; font-size:16px; color:var(--cream);
+    transition:opacity 0.2s ease, transform 0.15s ease;
+  }
+  #settings-toggle:hover{ opacity:1; transform:scale(1.06) rotate(20deg); }
+  #settings-panel{
+    position:fixed; top:64px; right:18px; z-index:6;
+    width:320px; max-width:calc(100vw - 36px);
+    background:#141414; border:1px solid #2a2a2a; border-radius:14px;
+    padding:18px; display:flex; flex-direction:column; gap:18px;
+    opacity:0; transform:translateY(-8px); pointer-events:none;
+    transition:opacity 0.16s ease, transform 0.16s ease;
+    max-height:80vh; overflow-y:auto;
+  }
+  #settings-panel.open{ opacity:1; transform:translateY(0); pointer-events:auto; }
+  .settings-section{ display:flex; flex-direction:column; gap:8px; }
+  .settings-section h3{
+    font-family:'Archivo Black', sans-serif;
+    font-size:13px; text-transform:uppercase; letter-spacing:0.02em;
+  }
+  .settings-section h3.tag-green{ color:var(--green); }
+  .settings-section h3.tag-purple{ color:#b48bff; }
+  .settings-status{ font-size:11px; font-weight:600; color:var(--dim); }
+  .settings-status.on{ color:var(--green); }
+  .settings-section p.hint{ font-size:11.5px; line-height:1.5; color:var(--dim); }
+  .settings-section a{ color:var(--yellow); }
+  .settings-section input{
+    width:100%; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:8px;
+    color:var(--cream); font-family:'Inter', sans-serif; font-size:12.5px; padding:9px 10px;
+  }
+  .settings-section input:focus{ outline:none; border-color:var(--green); }
+  .settings-row{ display:flex; gap:8px; }
+  .settings-section button{
+    flex-shrink:0; border-radius:8px; border:none; cursor:pointer;
+    font-family:'Inter', sans-serif; font-weight:700; font-size:11px;
+    letter-spacing:0.04em; text-transform:uppercase; padding:9px 12px;
+  }
+  .btn-save{ background:var(--green); color:#0a0a0a; }
+  .btn-clear{ background:transparent; border:1px solid #333 !important; color:var(--dim); }
+  .btn-clear:hover{ border-color:#666 !important; color:var(--cream); }
+  hr.sep{ border:none; border-top:1px solid #232323; }
+</style>
+</head>
+<body>
+
+  <svg class="squiggle tl" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1ed760"/><stop offset="50%" stop-color="#ffd520"/><stop offset="100%" stop-color="#ff3d9a"/>
+    </linearGradient></defs>
+    <path d="M10 150 C 60 40, 120 220, 180 90 S 300 40, 290 20" fill="none" stroke="url(#g1)" stroke-width="14" stroke-linecap="round"/>
+  </svg>
+  <svg class="squiggle br" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6b2fe0"/><stop offset="50%" stop-color="#ff3d9a"/><stop offset="100%" stop-color="#ffd520"/>
+    </linearGradient></defs>
+    <path d="M10 150 C 60 40, 120 220, 180 90 S 300 40, 290 20" fill="none" stroke="url(#g2)" stroke-width="14" stroke-linecap="round"/>
+  </svg>
+
+  <header>
+    <div class="eyebrow">Spotify-connected displays &amp; tools</div>
+    <h1>Now Playing<br>Projects</h1>
+  </header>
+
+  <div id="cards">
+    <a class="card c-green" id="card-album" href="https://maxscoggins.github.io/album-display/">
+      <div class="status off" id="status-album">Setup required</div>
+      <h2>Album Display</h2>
+      <p>Fullscreen album art for an old monitor — CRT and Y2K themes, live from whatever's playing on Spotify.</p>
+      <div class="cta" id="cta-album">Set up →</div>
+    </a>
+
+    <div class="card c-purple locked" id="card-festival">
+      <div class="status off">Coming soon</div>
+      <h2>Festival Itinerary</h2>
+      <p>Upload a lineup, get a personalized schedule based on how well each act matches your taste.</p>
+      <div class="cta">Not yet available</div>
+    </div>
+  </div>
+
+  <div id="settings-toggle" onclick="toggleSettings(event)">⚙</div>
+  <div id="settings-panel">
+
+    <div class="settings-section">
+      <h3 class="tag-green">Spotify</h3>
+      <div class="settings-status" id="spotify-status">○ Not connected</div>
+      <input type="text" id="spotify-id-input" placeholder="Client ID">
+      <div class="settings-row">
+        <button class="btn-save" onclick="saveSpotifyId()">Save</button>
+        <button class="btn-clear" onclick="clearSpotify()">Clear</button>
+      </div>
+      <p class="hint">Full login/reconnect happens on the <a href="https://maxscoggins.github.io/album-display/">Album Display</a> page — that's where the redirect is registered. This just stores the Client ID.</p>
+    </div>
+
+    <hr class="sep">
+
+    <div class="settings-section">
+      <h3 class="tag-purple">Claude / Anthropic</h3>
+      <div class="settings-status" id="anthropic-status">○ Not connected</div>
+      <input type="password" id="anthropic-key-input" placeholder="API key (sk-ant-...)">
+      <div class="settings-row">
+        <button class="btn-save" onclick="saveAnthropicKey()">Save</button>
+        <button class="btn-clear" onclick="clearAnthropic()">Clear</button>
+      </div>
+      <p class="hint">Needed for Festival Itinerary. Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> → API Keys → Create Key. Stored only in this browser.</p>
+    </div>
+
+  </div>
+
+<script>
+function isSpotifyConnected(){
+  return !!localStorage.getItem("spotify_client_id") && !!localStorage.getItem("spotify_refresh_token");
+}
+function isAnthropicConnected(){
+  return !!localStorage.getItem("anthropic_api_key");
+}
+
+function refreshCardStates(){
+  const albumOn = isSpotifyConnected();
+  document.getElementById("status-album").textContent = albumOn ? "Connected" : "Setup required";
+  document.getElementById("status-album").className = "status " + (albumOn ? "on" : "off");
+  document.getElementById("cta-album").textContent = albumOn ? "Open →" : "Set up →";
+
+  const festivalReady = isSpotifyConnected() && isAnthropicConnected();
+  // Festival app isn't built yet — stays locked regardless, but this is
+  // the exact condition that will gate it once it ships.
+  void festivalReady;
+}
+
+function refreshSettingsPanel(){
+  const clientId = localStorage.getItem("spotify_client_id") || "";
+  const spotifyOn = isSpotifyConnected();
+  document.getElementById("spotify-status").textContent = spotifyOn ? "● Connected" : (clientId ? "○ Client ID saved, not logged in" : "○ Not connected");
+  document.getElementById("spotify-status").className = "settings-status" + (spotifyOn ? " on" : "");
+  document.getElementById("spotify-id-input").value = clientId;
+
+  const anthropicKey = localStorage.getItem("anthropic_api_key") || "";
+  document.getElementById("anthropic-status").textContent = anthropicKey ? "● Connected" : "○ Not connected";
+  document.getElementById("anthropic-status").className = "settings-status" + (anthropicKey ? " on" : "");
+  document.getElementById("anthropic-key-input").value = anthropicKey;
+}
+
+function saveSpotifyId(){
+  const val = document.getElementById("spotify-id-input").value.trim();
+  if (!val) return;
+  localStorage.setItem("spotify_client_id", val);
+  refreshSettingsPanel();
+  refreshCardStates();
+}
+function clearSpotify(){
+  localStorage.removeItem("spotify_client_id");
+  localStorage.removeItem("spotify_access_token");
+  localStorage.removeItem("spotify_refresh_token");
+  localStorage.removeItem("spotify_token_expires");
+  refreshSettingsPanel();
+  refreshCardStates();
+}
+function saveAnthropicKey(){
+  const val = document.getElementById("anthropic-key-input").value.trim();
+  if (!val) return;
+  localStorage.setItem("anthropic_api_key", val);
+  refreshSettingsPanel();
+  refreshCardStates();
+}
+function clearAnthropic(){
+  localStorage.removeItem("anthropic_api_key");
+  refreshSettingsPanel();
+  refreshCardStates();
+}
+
+function toggleSettings(e){
+  e.stopPropagation();
+  refreshSettingsPanel();
+  document.getElementById("settings-panel").classList.toggle("open");
+}
+document.addEventListener("click", (e) => {
+  const panel = document.getElementById("settings-panel");
+  if (!panel.contains(e.target)) panel.classList.remove("open");
+});
+
+refreshCardStates();
+</script>
+</body>
+</html>
